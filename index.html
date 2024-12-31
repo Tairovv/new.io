@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Новогодние комплименты (адаптив)</title>
+  <!-- ВАЖНО: meta-тег для корректного отображения на мобильных -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* Базовые стили */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: linear-gradient(135deg, #e1f6ff, #ffe1fa);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+      overflow: hidden; /* чтобы не было лишних скроллов */
+    }
+
+    /* Кнопка */
+    button {
+      z-index: 10; 
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      background: #ff5252;
+      color: #fff;
+      border-radius: 8px;
+      transition: background 0.3s;
+      outline: none;
+    }
+    button:hover {
+      background: #ff7979;
+    }
+
+    /* Контейнер сердца (по умолчанию) */
+    .heart {
+      position: absolute;
+      width: 80px;    /* Ширина по умолчанию (на более широких экранах) */
+      height: 80px;   /* Высота по умолчанию (на более широких экранах) */
+      opacity: 0;
+      animation: fadeIn 0.7s forwards ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .heart svg {
+      width: 80px;
+      height: 80px;
+      overflow: visible; 
+    }
+
+    /* Плавное появление всего блока (масштаб+прозрачность) */
+    @keyframes fadeIn {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Линия сердца с анимацией прорисовки и заливки */
+    .heart path {
+      fill: none;
+      stroke: red;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 300;
+      stroke-dashoffset: 300;
+      animation: drawStroke 1.5s ease forwards,
+                 fillHeart 0.4s ease forwards;
+      animation-delay: 0s, 1.5s;
+    }
+    @keyframes drawStroke {
+      0%   { stroke-dashoffset: 300; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes fillHeart {
+      0%   { fill: none; }
+      100% { fill: pink; }
+    }
+
+    /* Текст внутри сердца */
+    .heart p {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+      max-width: 60px;     /* Чтобы текст не выходил из сердца на больших экранах */
+      font-size: 0.7rem;
+      line-height: 1.2;
+      color: #333;
+      text-align: center;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      overflow: hidden;
+      border-right: 2px solid transparent; /* курсор для эффекта печати */
+    }
+
+    /* Мигающий курсор (имитация печати) */
+    .typingCursor {
+      border-right: 2px solid #333;
+      animation: blinkCursor 0.6s infinite;
+    }
+    @keyframes blinkCursor {
+      0%, 100% { border-color: transparent; }
+      50%      { border-color: #333; }
+    }
+
+    /* --- МЕДИА-ЗАПРОСЫ под мобильные устройства (до 480px) --- */
+    @media (max-width: 480px) {
+      body {
+        /* Можно чуть уменьшить паддинг и т.д. Если нужно */
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 0.8rem 1.2rem;
+      }
+      .heart {
+        width: 120px;
+        height: 120px;
+      }
+      .heart svg {
+        width: 120px;
+        height: 120px;
+      }
+      .heart p {
+        max-width: 45px;  /* ещё меньше для маленьких экранов */
+        font-size: 0.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="complimentBtn">Получить комплимент</button>
+
+  
+  <script>
+    // Массив комплиментов
+    const compliments = [
+      "Обожаю твои милые ямочки!",
+      "Твоя улыбка, прекрасна как солнце!",
+      "Ты воплощение позитива!",
+      "Твоим талантам нет предела!",
+      "Обожаю твое чуство юмора!",
+      "Ты мой смысл жизни!",
+      "Твоя доброта, покорила меня!",
+      "У тебя шикарный стиль!",
+      "Ты делаешь этот мир лучше!",
+      "Рядом с тобой я счастлив!"
+    ];
+
+    let clickCount = 0;
+    const maxClicks = 10;
+
+    const button = document.getElementById('complimentBtn');
+
+    // Массив, где храним bounding-box уже размещённых сердечек
+    const placedHearts = [];
+
+    // Функция для определения реального размера сердца
+    // (мобильный / десктоп), чтобы точно совпадало с CSS
+    function getHeartSize() {
+      if (window.innerWidth <= 480) {
+        return { width: 90, height: 90 };
+      } else {
+        return { width: 120, height: 120 };
+      }
+    }
+
+    // Проверка пересечения двух прямоугольников
+    function isOverlap(r1, r2) {
+      return !(
+        r2.x1 > r1.x2 ||
+        r2.x2 < r1.x1 ||
+        r2.y1 > r1.y2 ||
+        r2.y2 < r1.y1
+      );
+    }
+
+    // Генерация случайных координат с учётом:
+    // - не перекрывать кнопку
+    // - не перекрывать уже размещённые сердца
+    // - совпадать с размерами сердца из getHeartSize()
+    function getRandomPosition() {
+      const { width: heartWidth, height: heartHeight } = getHeartSize();
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      // Координаты кнопки
+      const btnRect = button.getBoundingClientRect();
+      const btnBBox = {
+        x1: btnRect.left,
+        y1: btnRect.top,
+        x2: btnRect.right,
+        y2: btnRect.bottom
+      };
+
+      let tries = 100;
+      while (tries > 0) {
+        const x = Math.floor(Math.random() * (windowWidth - heartWidth));
+        const y = Math.floor(Math.random() * (windowHeight - heartHeight));
+
+        const heartBBox = {
+          x1: x,
+          y1: y,
+          x2: x + heartWidth,
+          y2: y + heartHeight
+        };
+
+        // Проверяем пересечение с кнопкой
+        if (!isOverlap(heartBBox, btnBBox)) {
+          // Проверяем пересечение с уже размещёнными сердцами
+          let overlapAny = false;
+          for (let placed of placedHearts) {
+            if (isOverlap(heartBBox, placed)) {
+              overlapAny = true;
+              break;
+            }
+          }
+          if (!overlapAny) {
+            return { x, y, bbox: heartBBox };
+          }
+        }
+        tries--;
+      }
+      return null;
+    }
+
+    // Создаём сердце (SVG + <p>) 
+    function createHeartElement() {
+      const heartEl = document.createElement('div');
+      heartEl.classList.add('heart');
+      heartEl.innerHTML = `
+        <svg viewBox="0 0 100 100">
+          <path d="
+            M50,15
+            C65,0,  90,15, 90,35
+            C90,60, 65,80, 50,95
+            C35,80, 10,60, 10,35
+            C10,15, 35,0,  50,15
+            Z
+          " />
+        </svg>
+        <p></p>
+      `;
+      return heartEl;
+    }
+
+    // Эффект «печатающегося» текста
+    function typeText(element, text, speed = 30) {
+      element.textContent = "";
+      element.classList.add("typingCursor");
+      let i = 0;
+      const timer = setInterval(() => {
+        element.textContent += text.charAt(i);
+        i++;
+        if (i >= text.length) {
+          clearInterval(timer);
+          element.classList.remove("typingCursor");
+        }
+      }, speed);
+    }
+
+    // Клик по кнопке
+    button.addEventListener('click', () => {
+      clickCount++;
+
+      if (clickCount <= maxClicks) {
+        const pos = getRandomPosition();
+        if (!pos) {
+          alert('Не осталось места для нового сердечка!');
+          clickCount--;
+          return;
+        }
+
+        const { x, y, bbox } = pos;
+        const heartEl = createHeartElement();
+        heartEl.style.left = x + 'px';
+        heartEl.style.top = y + 'px';
+        document.body.appendChild(heartEl);
+
+        // Запоминаем координаты
+        placedHearts.push(bbox);
+
+        // Берём комплимент и «печатаем» его
+        const compliment = compliments[(clickCount - 1) % compliments.length];
+        const p = heartEl.querySelector('p');
+        typeText(p, compliment, 20);
+
+        // Меняем текст кнопки на 10-м клике
+        if (clickCount === maxClicks) {
+          button.textContent = 'Получить поздравления с Новым годом';
+        }
+      } else {
+        // После 10-го нажатия -> переход
+        window.location.href = 'NewYear.html';
+      }
+    });
+  </script>
+
+  
+</body>
+</html>
