@@ -29,7 +29,7 @@
       padding: 2rem 1rem;
       text-align: center;
     }
-    /* Стили для элемента, где печатается текст */
+    
     #typed {
       margin-top: 1rem;
       font-size: 1.2rem;
@@ -39,28 +39,27 @@
   </style>
 </head>
 <body>
-  <!-- Зона снега -->
+
   <div id="snowfallArea"></div>
 
-  <!-- Контент -->
+ 
   <div class="container">
     
-    <!-- Блок для анимации печати -->
+   
     <div id="typed"></div>
   </div>
 
-  <!-- 1) jQuery -->
+ 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   
-  <!-- 2) snowfall (локально) -->
-  <!-- Убедитесь, что этот файл действительно лежит в корне: /snowfall.jquery.min.js -->
+  
 
-  <!-- 3) Подключаем Typed.js (через CDN) -->
+
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.16/dist/typed.umd.js"></script>
 
-  <!-- 4) Инициализация снега и Typed.js -->
+
   <script>
-    // Количество снежинок
+ 
     const FLAKES_COUNT = 50;
 
     // Массив для хранения объектов снежинок
@@ -69,33 +68,26 @@
     // Контейнер, в который кладём снежинки
     const snowfallArea = document.getElementById('snowfallArea');
 
-    // Функция для создания одной снежинки (DOM-элемента и объекта с параметрами)
+    // Функция для создания одной снежинки 
     function createFlake() {
       // Создаём элемент
       const flakeEl = document.createElement('div');
       flakeEl.classList.add('snowflake');
-      
-      // Можем отобразить снежинку в виде символа или текста
-      // Например, "❄" или "*"
       flakeEl.textContent = '❄';
 
       // Добавляем на страницу
       snowfallArea.appendChild(flakeEl);
-
-      // Задаём начальные свойства (координаты, скорость и т.п.)
-      // Ширина/высота окна
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
 
       // Случайная позиция X, Y и скорость падения
-      // Пусть Y будет чуть выше видимой части, чтобы снежинка «влетала» сверху
       const startX = Math.random() * screenW;
       const startY = -Math.random() * screenH;
       const speed = 1 + Math.random() * 2;  // скорость падения
       const size = 10 + Math.random() * 15; // размер шрифта
       const drift = Math.random() * 2 - 1;  // «дрейф» по горизонтали (-1..1)
 
-      // Применим размеры
+      
       flakeEl.style.fontSize = size + 'px';
       
       return {
@@ -126,10 +118,10 @@
         // Немного смещаем по горизонтали
         flake.x += flake.drift;
 
-        // Если улетела за нижнюю границу, возвращаем наверх
+
         if (flake.y > screenH) {
-          flake.y = -flake.size; // ставим примерно над экраном
-          flake.x = Math.random() * screenW; // случайная X
+          flake.y = -flake.size;
+          flake.x = Math.random() * screenW; 
         }
 
         // Применяем координаты
@@ -143,10 +135,9 @@
       requestAnimationFrame(animate);
     }
 
-    // При изменении размера окна обновляем позиции
+  
     window.addEventListener('resize', () => {
-      // Можно перезапустить снежинки или просто обновить screenW/ screenH
-      // В этом примере оставляем, как есть
+      
     });
 
     // Инициализация
